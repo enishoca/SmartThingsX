@@ -1,5 +1,7 @@
 # SmartThingsX
-![Image of Logo](https://github.com/enishoca/SmartThingsX/raw/master/x1oredb.png)
+<p align="right">
+  <img src="https://github.com/enishoca/SmartThingsX/raw/master/x1oredb.png" />
+</p>
 
 SmartThing SmartApps and Device Handlers for X-10 devices using Node Red and Mochad
 
