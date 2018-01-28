@@ -1,5 +1,6 @@
 # SmartThingsX
 ![Image of Logo](https://github.com/enishoca/SmartThingsX/raw/master/x1oredb.png)
+
 SmartThing SmartApps and Device Handlers for X-10 devices using Node Red and Mochad
 
 I have tried a few different ways of integrating X-10 devices with Smartthings, but every solution required tinkering and making changes outside the ST applications making maintenance difficult.  All other solutions work only one way either control devices or respond to remotes, this can do both.  In this solution all X-10 settings and device mappings are done locally on SmartThings. Only a couple of one times settings need to be made on the Node Red flow.   
