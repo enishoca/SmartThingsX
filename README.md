@@ -13,15 +13,18 @@ Please note: Dimmer functions and security devices are not supported
 
 **Requirements**
 
-* Raspberry Pi
+Raspberry Pi 
+
 These instructions are for Raspberry Pi, but they can be easily adapted to any Linux variant
 
-* Mochad and CM15A or CM19A USB Devices
+Mochad and CM15A or CM19A USB Devices
+
 Mochad exposes a TCP interface to X-10 commands, and can run on any linux system including Raspberry PI. It uses CM15A or CM19A USB devices to communicate with X-10 over RF or powerline. Using these devices you are not limited to a single house code, you can use any of the 15 house code with any x-10 device.
 https://bfocht.github.io/mochad/
 https://bfocht.github.io/mochad/mochad_reference.html
 
-* Node Red
+Node Red
+
 Node-RED is a programming tool for wiring together hardware devices, APIs and online services using a browser-based editor.  Node Red is very simple to deploy and is very light-weight. Requires very little effort to setup and run
 https://nodered.org/ 
 https://nodered.org/docs/hardware/raspberrypi 
@@ -85,13 +88,12 @@ Play around a little bit to get the hangs of the basics
 * Browse to the Node Red page on your browser
 
 * Click on the menu to right and select Import->Clipboard
-![52 AM|432x450](upload://bg1B31crz9I8nGxYct85bGsfj4p.png)
+
 
 * Copy the contents of the clipboard in the edit box, select 'new flow' and import it
-![47 AM|432x300](upload://mcDd28z8bSy6AzTN7xe9Lr1aPgt.png)
 
-* Edit the flow and put the hostname for the mochad server, and the file path for the settings file.  If you are running node red as user pi and mochad is running on the same machine, you wouldn't need to make any changes.  See the nodes marked with at red box
-![18 AM|536x499](upload://lFVylIUrRBoXMRkcpzcTidnEI6C.png)
+
+* Edit the flow and put the hostname for the mochad server, and the file path for the settings file.  If you are running node red as user pi and mochad is running on the same machine, you wouldn't need to make any changes.  
 
 * Next Deploy the flow to activate it.
  
@@ -125,10 +127,3 @@ You will need to select the hub and configure IP address and port for the Node R
 * You can then add X-10 devices on smartthings and set their X-10 addresses.  
 Once you add a switch you should be able to turn it on and off.  You can map remote buttons and motion sensor address to any ST Thing that supports on/off function and control it.
 
-**Screenshots**
-*** Main Setup**
-![main|562x500](upload://gcHrZboysmNOEl1R8IYNSKIHVBY.jpg)
-*** Switches and Modules**
-![switch|562x500](upload://q1fFM5XsTnVVVHTNVcAEKlJUrBK.PNG)
-*** Remotes and Motion Sensors**
-![remote|562x500](upload://tFlq1eK33ABKoPII8gpFpS2GiNJ.PNG)
