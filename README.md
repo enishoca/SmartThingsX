@@ -3,7 +3,9 @@
 
 SmartThing SmartApps and Device Handlers for X-10 devices using Node Red and Mochad
 
-I have tried a few different ways of integrating X-10 devices with Smartthings, but every solution required tinkering and making changes outside the ST applications making maintenance difficult.  All other solutions work only one way either control devices or respond to remotes, this can do both.  In this solution all X-10 settings and device mappings are done locally on SmartThings. Only a couple of one times settings need to be made on the Node Red flow.   
+This solution allows 2-way communication between SmartThings and X-10 devices using Node Red and Mochad.  You can control your X-10 devices from within ST and use various automation solutions within ST.  You can also use X-10 remotes and motion sensors to control other ST devices.   X-10 equipment is fairly inexpensive and  readily available on E-Bay etc.
+
+In this solution all X-10 settings and device mappings are done locally on SmartThings. Only a couple of one times settings need to be made on the Node Red flow.   
 
 See this page for details 
 https://community.smartthings.com/t/release-node-red-bridge-for-x-10-devices-switches-modules-remotes-motion-sensors/116909
