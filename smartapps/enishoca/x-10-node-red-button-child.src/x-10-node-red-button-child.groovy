@@ -76,7 +76,6 @@ def pageMain() {
         "16": "16"
       ]
       input "buttonSwitch", "capability.switch", title: "Select SmartThings switch to control", required: true, multiple: true
-
     }
   }
 }
@@ -111,18 +110,47 @@ def getDeviceString() {
 
 def X10RemoteEventHandler(evt) {
   def data = parseJson(evt.data)
-  //log.debug "event data: ${data}"
+  //log.debug "X-10 remote event recieved - data: ${data}"
   setDeviceStatus(data.deviceString, data.status)
   return
 }
 
 def setDeviceStatus(deviceString, status) {
-  //log.debug "Child setDeviceStatus deviceString:[${deviceString}]  state.deviceString:[${state.deviceString}]"
+  log.debug "Child setDeviceStatus  ${buttonSwitch}   state.deviceString:[${state.deviceString}]"
+  
   if (deviceString == state.deviceString) {
-    if (status == "on") {
-      buttonSwitch.on()
-    } else {
-      buttonSwitch.off()
-    }
+  log.trace status
+    switch (status) {
+        case "on":
+            buttonSwitch.on()
+            //log.trace ("Turning on")
+            break
+        case "off":
+            buttonSwitch.off()
+            //log.trace ("Turning off")
+            break
+        case "dim":
+             
+            dimSwitches(buttonSwitch, true)
+            log.trace ("Dim " + buttonSwitch.currentValue("level") )
+            break
+        case "bright":
+            dimSwitches(buttonSwitch, false)
+            log.trace ("Bright " + buttonSwitch.currentValue("level") )
+            break
+     }   
+  }
+}
+
+private dimSwitches(buttonSwitches, dimming)
+{
+  for (button in buttonSwitches) {
+    float level = button.currentValue("level")
+    if (dimming) {
+      button.setLevel (Math.max(0, level - 7));
+    } else 
+    {
+       button.setLevel (Math.min ( 100, level + 7));
+    } 
   }
 }

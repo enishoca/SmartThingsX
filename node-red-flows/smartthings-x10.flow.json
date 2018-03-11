@@ -1,255 +1,331 @@
-[{
-  "id": "11f9de84.0fa6d1",
-  "type": "tab",
-  "label": "Smartthings X10 Connector",
-  "disabled": false,
-  "info": ""
-}, {
-  "id": "6e91aba2.220724",
-  "type": "tcp in",
-  "z": "11f9de84.0fa6d1",
-  "name": "mochad listener",
-  "server": "client",
-  "host": "localhost",
-  "port": "1099",
-  "datamode": "stream",
-  "datatype": "buffer",
-  "newline": "",
-  "topic": "",
-  "base64": false,
-  "x": 86,
-  "y": 245,
-  "wires": [
-    ["f5bdb597.f6b4d8", "34fedde5.89c5c2"]
-  ]
-}, {
-  "id": "64458d80.619564",
-  "type": "debug",
-  "z": "11f9de84.0fa6d1",
-  "name": "",
-  "active": true,
-  "console": "false",
-  "complete": "true",
-  "x": 740.5,
-  "y": 712,
-  "wires": []
-}, {
-  "id": "f5bdb597.f6b4d8",
-  "type": "function",
-  "z": "11f9de84.0fa6d1",
-  "name": "Parse mochad Messages",
-  "func": "msg.headers = {};\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['X10NodeRed'] = 'DeviceUpdate';\n \n\n\nconst inLines = new Buffer(msg.payload, 'hex');  \n//return {payload: stringBuf.toString()};\n\nvar lastCodeSeen = context.get(\"lastCodeSeen\");\nif(typeof lastCodeSeen == \"undefined\") {\n    lastCodeSeen = {\n        housecode: \"x\",\n        unitcode: \"0\"\n    };\n    context.set(\"lastCodeSeen\", lastCodeSeen);\n}\n\ntry {\n\n    var eventData, m;\n    \n    if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Rx|Tx)\\s+(RF|PL)\\s+House:\\s+([a-pA-P])\\s+Func:\\s+All\\s+(units|lights)\\s+(on|off)$/m.exec(inLines)) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: \"*\" + m[4].trim(),\n            state: m[5].toLowerCase().trim()\n        };\n        \n        msg.payload = JSON.stringify(eventData);\n        msg.headers['eventData'] = msg.payload;\n        return msg; //{payload: JSON.stringify(eventData)};\n    }\n    if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Rx|Tx)\\s+(RFSEC)\\s+Addr:\\s+(0x[0-9a-fA-F]+)(\\s+)Func:\\s+(.+)$/m.exec(inLines)) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: \"*\" + m[4].trim(),\n            state: m[5].toLowerCase().trim()\n        };\n        msg.payload = JSON.stringify(eventData);\n        msg.headers['eventData'] = msg.payload;\n        return msg; //{payload: JSON.stringify(eventData)};\n    }\n    if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Rx|Tx)\\s+(RF|PL)\\s+HouseUnit:\\s+([a-pA-P])(\\d{1,2})\\s+Func:\\s+(On|Off)/m.exec(inLines)) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: parseInt(m[4].trim(), 10),\n            state: m[5].toLowerCase().trim()\n        };\n        msg.payload = JSON.stringify(eventData);\n        msg.headers['eventData'] = msg.payload;\n        return msg; //{payload: JSON.stringify(eventData)};\n    } else if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(?:Rx|Tx)\\s+(?:RF|PL)\\s+HouseUnit:\\s+([a-pA-P])(\\d{1,2})/m.exec(inLines)) {\n        lastCodeSeen.housecode = m[1].toLowerCase().trim();\n        lastCodeSeen.unitcode = parseInt(m[2].trim(), 10);\n        context.set(\"lastCodeSeen\", lastCodeSeen);\n    }\n    if (lastCodeSeen.housecode && lastCodeSeen.unitcode && (m = /\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Rx|Tx)\\s+(RF|PL)\\s+House:\\s+([a-pA-P])\\s+Func:\\s+(On|Off)$/m.exec(inLines))) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: null,\n            state: m[4].toLowerCase().trim()\n        };\n        if (eventData.housecode === lastCodeSeen.housecode) {\n            eventData.unitcode = lastCodeSeen.unitcode;\n            msg.payload = JSON.stringify(eventData);\n            msg.headers['eventData'] = msg.payload;\n            return msg; //{payload: JSON.stringify(eventData)};\n        }\n    }\n}\n \ncatch(err) {\n   return null; //ignore the exception, its probably a message we don't understand\n//console.log(\"exception in parsing: \" + err.message); \n} \n  \nreturn null;\n\n",
-  "outputs": 1,
-  "noerr": 0,
-  "x": 160,
-  "y": 313,
-  "wires": [
-    ["d3985727.45e718"]
-  ]
-}, {
-  "id": "10235f8e.7e83d",
-  "type": "http in",
-  "z": "11f9de84.0fa6d1",
-  "name": "/register",
-  "url": "/register",
-  "method": "get",
-  "upload": false,
-  "swaggerDoc": "",
-  "x": 68,
-  "y": 490,
-  "wires": [
-    ["2b323c0f.f1abb4", "7eda1710.750438"]
-  ]
-}, {
-  "id": "c715cf90.00121",
-  "type": "http response",
-  "z": "11f9de84.0fa6d1",
-  "name": "Send respone to ST",
-  "statusCode": "",
-  "headers": {},
-  "x": 716,
-  "y": 532,
-  "wires": []
-}, {
-  "id": "b7640b33.d0c8e8",
-  "type": "http request",
-  "z": "11f9de84.0fa6d1",
-  "name": "http request to ST",
-  "method": "POST",
-  "ret": "txt",
-  "url": "http://192.168.0.247:39500/",
-  "tls": "",
-  "x": 727.5,
-  "y": 314,
-  "wires": [
-    []
-  ]
-}, {
-  "id": "34fedde5.89c5c2",
-  "type": "debug",
-  "z": "11f9de84.0fa6d1",
-  "name": "",
-  "active": false,
-  "console": "false",
-  "complete": "true",
-  "x": 748,
-  "y": 243,
-  "wires": []
-}, {
-  "id": "ea9a3471.00dd58",
-  "type": "file in",
-  "z": "11f9de84.0fa6d1",
-  "name": "Read ST setting after restart",
-  "filename": "/home/pi/.red-st-connect.conf",
-  "format": "utf8",
-  "chunk": false,
-  "sendError": false,
-  "x": 366.5,
-  "y": 80,
-  "wires": [
-    ["4bc25640.11ebb8"]
-  ]
-}, {
-  "id": "f496137f.9508b",
-  "type": "inject",
-  "z": "11f9de84.0fa6d1",
-  "name": "Startup",
-  "topic": "",
-  "payload": "",
-  "payloadType": "date",
-  "repeat": "",
-  "crontab": "",
-  "once": true,
-  "x": 100,
-  "y": 81,
-  "wires": [
-    ["ea9a3471.00dd58"]
-  ]
-}, {
-  "id": "7eda1710.750438",
-  "type": "file",
-  "z": "11f9de84.0fa6d1",
-  "name": "Persist ST settings to File",
-  "filename": "/home/pi/.red-st-connect.conf",
-  "appendNewline": false,
-  "createDir": true,
-  "overwriteFile": "true",
-  "x": 316.5,
-  "y": 459,
-  "wires": []
-}, {
-  "id": "7283276.68db4d8",
-  "type": "comment",
-  "z": "11f9de84.0fa6d1",
-  "name": "setup config file path",
-  "info": "If you are not running as pi or /home/pi is\nnot writable change the location of where\nthis flow will read and write ST settings\nsettigns will be stored in /home/pi/.red-st-connect.conf",
-  "x": 348,
-  "y": 43,
-  "wires": []
-}, {
-  "id": "4bc25640.11ebb8",
-  "type": "function",
-  "z": "11f9de84.0fa6d1",
-  "name": "Set ST Settings in global context",
-  "func": "try {\n    var STsettings = JSON.parse(msg.payload);\n    if (typeof obj !== 'string' ) \n        global.set(\"STsettings\", STsettings);\n} catch (e) {\n    // ignore errors\n}\n\nmsg.payload = \"Smartthings settings: \" + JSON.stringify (STsettings);\n\nreturn msg\n\n\n\n",
-  "outputs": 1,
-  "noerr": 0,
-  "x": 674,
-  "y": 80,
-  "wires": [
-    []
-  ]
-}, {
-  "id": "d3985727.45e718",
-  "type": "function",
-  "z": "11f9de84.0fa6d1",
-  "name": "Setup http request",
-  "func": "\n// if you want to hard code the url to ST uncomment these two lines and\n// delete or comment out the rest of the lines in this node\n// msg.url. = \"http://ip_address_of_Smartthings_hub:39500/\";\n// return msg;\n\nvar STsettings = global.get(\"STsettings\");\nif(typeof STsettings == \"undefined\") {\n    node.error(\"Can't continue. Don't know where Smartthings hub is.\");\n    return null;\n}\nnode.log(\"Please ignore the message properties override warning\");\nmsg.url =\"http://\" + STsettings.ip_for_st + \":\" + STsettings.port_for_st;\nreturn msg;\n\n\n\n\n\n",
-  "outputs": 1,
-  "noerr": 0,
-  "x": 423,
-  "y": 313,
-  "wires": [
-    ["34fedde5.89c5c2", "b7640b33.d0c8e8"]
-  ]
-}, {
-  "id": "422293ff.6eb8ac",
-  "type": "http in",
-  "z": "11f9de84.0fa6d1",
-  "name": "/push",
-  "url": "/push",
-  "method": "get",
-  "upload": false,
-  "swaggerDoc": "",
-  "x": 56,
-  "y": 637,
-  "wires": [
-    ["e77b920e.d0f0a"]
-  ]
-}, {
-  "id": "2b323c0f.f1abb4",
-  "type": "function",
-  "z": "11f9de84.0fa6d1",
-  "name": "Registration response",
-  "func": "msg.headers = {};\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['X10NodeRed'] = 'Registered';\nmsg.payload =  {\"X10NodeRed\":\"Registered\"};\nreturn msg;\n",
-  "outputs": 1,
-  "noerr": 0,
-  "x": 310,
-  "y": 532,
-  "wires": [
-    ["c715cf90.00121"]
-  ]
-}, {
-  "id": "6ab76475.19d02c",
-  "type": "comment",
-  "z": "11f9de84.0fa6d1",
-  "name": "setup mochad host ip",
-  "info": "This is the mochad listener you should \nsetup the mochad host address here\n",
-  "x": 107,
-  "y": 195,
-  "wires": []
-}, {
-  "id": "743528b3.d82898",
-  "type": "tcp out",
-  "z": "11f9de84.0fa6d1",
-  "host": "localhost",
-  "port": "1099",
-  "beserver": "client",
-  "base64": false,
-  "end": false,
-  "name": "mochad sender",
-  "x": 735.5,
-  "y": 636,
-  "wires": []
-}, {
-  "id": "e77b920e.d0f0a",
-  "type": "function",
-  "z": "11f9de84.0fa6d1",
-  "name": "parse send message",
-  "func": "var jsonText = JSON.stringify(msg.payload); \nvar obj = JSON.parse(jsonText);\n\nif (typeof obj !== 'string' ) {\n    var device = obj.device.replace(/-/g, \" \");\n    msg.payload = device + \" \" + obj.action+\"\\n\";\n    return msg;\n}",
-  "outputs": 1,
-  "noerr": 0,
-  "x": 373,
-  "y": 638,
-  "wires": [
-    ["743528b3.d82898", "64458d80.619564"]
-  ]
-}, {
-  "id": "608596b.aa7c468",
-  "type": "comment",
-  "z": "11f9de84.0fa6d1",
-  "name": "setup mochad host ip",
-  "info": "This is the mochad listener you should \nsetup the mochad host address here\n",
-  "x": 715,
-  "y": 596,
-  "wires": []
-}, {
-  "id": "f57e6f04.a0411",
-  "type": "comment",
-  "z": "11f9de84.0fa6d1",
-  "name": "setup config file path",
-  "info": "If you are not running as pi or /home/pi is\nnot writable change the location of where\nthis flow will read and write ST settings\nsettigns will be stored in /home/pi/.red-st-connect.conf",
-  "x": 310,
-  "y": 416,
-  "wires": []
-}]
+[
+  {
+      "id": "4464d37e.3c1aec",
+      "type": "tab",
+      "label": "Smartthings X10 Connector",
+      "disabled": false,
+      "info": ""
+  },
+  {
+      "id": "c3587cb2.f21c1",
+      "type": "debug",
+      "z": "4464d37e.3c1aec",
+      "name": "",
+      "active": false,
+      "console": "false",
+      "complete": "payload",
+      "x": 630,
+      "y": 840,
+      "wires": []
+  },
+  {
+      "id": "2b917033.c2468",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "Parse mochad Messages",
+      "func": "msg.headers = {};\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['X10NodeRed'] = 'DeviceUpdate';\n \nvar lastCommand = global.get(\"LastCommand\");\nlastCommand = lastCommand.toLowerCase().trim();\n//node.warn(lastCommand);\n\nconst inLines = new Buffer(msg.payload, 'hex');  \n//node.warn(inLines.toString());\nvar lastCodeSeen = context.get(\"lastCodeSeen\");\nif(typeof lastCodeSeen == \"undefined\") {\n    lastCodeSeen = {\n        housecode: \"x\",\n        unitcode: \"0\"\n    };\n    context.set(\"lastCodeSeen\", lastCodeSeen);\n}\n\ntry {\n\n    var eventData, m;\n    \n    if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Tx|Rx)\\s+(RF|PL)\\s+House:\\s+([a-pA-P])\\s+Func:\\s+All\\s+(units|lights)\\s+(on|off)$/m.exec(inLines)) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: \"*\" + m[4].trim(),\n            state: m[5].toLowerCase().trim()\n        };\n        \n        msg.payload = JSON.stringify(eventData);\n        msg.headers['eventData'] = msg.payload;\n        return msg; //{payload: JSON.stringify(eventData)};\n    }\n    if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Tx|Rx)\\s+(RFSEC)\\s+Addr:\\s+(0x[0-9a-fA-F]+)(\\s+)Func:\\s+(.+)$/m.exec(inLines)) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: \"*\" + m[4].trim(),\n            state: m[5].toLowerCase().trim()\n        };\n        msg.payload = JSON.stringify(eventData);\n        msg.headers['eventData'] = msg.payload;\n        return msg; //{payload: JSON.stringify(eventData)};\n    }\n    if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Tx|Rx)\\s+(RF|PL)\\s+HouseUnit:\\s+([a-pA-P])(\\d{1,2})\\s+Func:\\s+(On|Off)/m.exec(inLines)) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: parseInt(m[4].trim(), 10),\n            state: m[5].toLowerCase().trim()\n        };\n        msg.payload = JSON.stringify(eventData);\n        msg.headers['eventData'] = msg.payload;\n        return msg; //{payload: JSON.stringify(eventData)};\n    } else if (m = /^\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(?:Rx)\\s+(?:RF|PL)\\s+HouseUnit:\\s+([a-pA-P])(\\d{1,2})/m.exec(inLines)) {\n        lastCodeSeen.housecode = m[1].toLowerCase().trim();\n        lastCodeSeen.unitcode = parseInt(m[2].trim(), 10);\n        context.set(\"lastCodeSeen\", lastCodeSeen);\n    }\n    if (lastCodeSeen.housecode && lastCodeSeen.unitcode && (m = /\\d{2}\\/\\d{2}\\s+(?:\\d{2}:){2}\\d{2}\\s(Rx|Tx)\\s+(RF|PL)\\s+House:\\s+([a-pA-P])\\s+Func:\\s+(On|Off|Dim|Bright)$/m.exec(inLines))) {\n        eventData = {\n            protocol: m[2].toLowerCase().trim(),\n            direction: m[1].toLowerCase().trim(),\n            housecode: m[3].toLowerCase().trim(),\n            unitcode: null,\n            state: m[4].toLowerCase().trim()\n        };\n        if (eventData.housecode === lastCodeSeen.housecode) {\n            eventData.unitcode = lastCodeSeen.unitcode;\n            msg.payload = JSON.stringify(eventData);\n            msg.headers['eventData'] = msg.payload;\n            return msg; //{payload: JSON.stringify(eventData)};\n        }\n    }\n} \ncatch(err) {\n   return null; //ignore the exception, its probably a message we don't understand\n   //console.log(\"exception in parsing: \" + err.message); \n} \n  \nreturn null;\n\n",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 530,
+      "y": 200,
+      "wires": [
+          [
+              "e17e31b.225a8d",
+              "cf234cdd.853a6"
+          ]
+      ]
+  },
+  {
+      "id": "5d10e7f6.374118",
+      "type": "http in",
+      "z": "4464d37e.3c1aec",
+      "name": "/register",
+      "url": "/register",
+      "method": "get",
+      "upload": false,
+      "swaggerDoc": "",
+      "x": 80,
+      "y": 751,
+      "wires": [
+          [
+              "4327084f.3cead8",
+              "5e1c0897.06a348"
+          ]
+      ]
+  },
+  {
+      "id": "c6067ee5.9af4c",
+      "type": "http response",
+      "z": "4464d37e.3c1aec",
+      "name": "Send respone to ST",
+      "statusCode": "",
+      "headers": {},
+      "x": 640,
+      "y": 760,
+      "wires": []
+  },
+  {
+      "id": "881d9c1.084236",
+      "type": "http request",
+      "z": "4464d37e.3c1aec",
+      "name": "http request to ST",
+      "method": "POST",
+      "ret": "txt",
+      "url": "",
+      "tls": "",
+      "x": 850,
+      "y": 320,
+      "wires": [
+          []
+      ]
+  },
+  {
+      "id": "cf234cdd.853a6",
+      "type": "debug",
+      "z": "4464d37e.3c1aec",
+      "name": "",
+      "active": false,
+      "console": "false",
+      "complete": "true",
+      "x": 810,
+      "y": 200,
+      "wires": []
+  },
+  {
+      "id": "4f44c0f8.a6329",
+      "type": "file in",
+      "z": "4464d37e.3c1aec",
+      "name": "Read ST setting after restart",
+      "filename": "/home/pi/.red-st-connect.conf",
+      "format": "utf8",
+      "chunk": false,
+      "sendError": false,
+      "x": 366.5,
+      "y": 80,
+      "wires": [
+          [
+              "688833ed.0bd46c"
+          ]
+      ]
+  },
+  {
+      "id": "4d352fb.84e77d",
+      "type": "inject",
+      "z": "4464d37e.3c1aec",
+      "name": "Startup",
+      "topic": "",
+      "payload": "",
+      "payloadType": "date",
+      "repeat": "",
+      "crontab": "",
+      "once": true,
+      "x": 91,
+      "y": 81,
+      "wires": [
+          [
+              "4f44c0f8.a6329",
+              "ba3b8ce1.2ec8a"
+          ]
+      ]
+  },
+  {
+      "id": "5e1c0897.06a348",
+      "type": "file",
+      "z": "4464d37e.3c1aec",
+      "name": "Persist ST settings to File",
+      "filename": "/home/pi/.red-st-connect.conf",
+      "appendNewline": false,
+      "createDir": true,
+      "overwriteFile": "true",
+      "x": 316.5,
+      "y": 719,
+      "wires": []
+  },
+  {
+      "id": "c08f6eac.3fa3b",
+      "type": "comment",
+      "z": "4464d37e.3c1aec",
+      "name": "setup config file path",
+      "info": "If you are not running as pi or /home/pi is\nnot writable change the location of where\nthis flow will read and write ST settings\nsettigns will be stored in /home/pi/.red-st-connect.conf",
+      "x": 348,
+      "y": 43,
+      "wires": []
+  },
+  {
+      "id": "688833ed.0bd46c",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "Set ST Settings in global context",
+      "func": "try {\n    var STsettings = JSON.parse(msg.payload);\n    if (typeof obj !== 'string' ) \n        global.set(\"STsettings\", STsettings);\n    global.set(\"LastCommand\", \" \");\n} catch (e) {\n    // ignore errors\n}\n\nmsg.payload = \"Smartthings settings: \" + JSON.stringify (STsettings);\n\nreturn msg\n\n\n\n",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 674,
+      "y": 80,
+      "wires": [
+          []
+      ]
+  },
+  {
+      "id": "e17e31b.225a8d",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "Setup http request",
+      "func": "\n// if you want to hard code the url to ST uncomment these two lines and\n// delete or comment out the rest of the lines in this node\n// msg.url. = \"http://ip_address_of_Smartthings_hub:39500/\";\n// return msg;\n\nvar STsettings = global.get(\"STsettings\");\nif(typeof STsettings == \"undefined\") {\n    node.error(\"Can't continue. Don't know where Smartthings hub is.\");\n    return null;\n}\nnode.log(\"Please ignore the message properties override warning\");\nmsg.url =\"http://\" + STsettings.ip_for_st + \":\" + STsettings.port_for_st;\nreturn msg;\n\n\n\n\n\n",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 630,
+      "y": 260,
+      "wires": [
+          [
+              "cf234cdd.853a6",
+              "881d9c1.084236"
+          ]
+      ]
+  },
+  {
+      "id": "68e49f7f.e8d8d",
+      "type": "http in",
+      "z": "4464d37e.3c1aec",
+      "name": "/push",
+      "url": "/push",
+      "method": "get",
+      "upload": false,
+      "swaggerDoc": "",
+      "x": 61,
+      "y": 500,
+      "wires": [
+          [
+              "94402c6e.c2c01",
+              "6fee4319.991d1c"
+          ]
+      ]
+  },
+  {
+      "id": "4327084f.3cead8",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "Registration response",
+      "func": "msg.headers = {};\nmsg.headers['Content-Type'] = 'application/json';\nmsg.headers['X10NodeRed'] = 'Registered';\nmsg.payload =  {\"X10NodeRed\":\"Registered\"};\nreturn msg;\n",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 310,
+      "y": 792,
+      "wires": [
+          [
+              "c6067ee5.9af4c",
+              "c3587cb2.f21c1"
+          ]
+      ]
+  },
+  {
+      "id": "c607a82b.95bf28",
+      "type": "comment",
+      "z": "4464d37e.3c1aec",
+      "name": "setup mochad host ip",
+      "info": "This is the mochad listener you should \nsetup the mochad host address here\n",
+      "x": 320,
+      "y": 160,
+      "wires": []
+  },
+  {
+      "id": "6fee4319.991d1c",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "parse send message",
+      "func": "var jsonText = JSON.stringify(msg.payload); \nvar obj = JSON.parse(jsonText);\n\nif (typeof obj !== 'string' ) {\n    var device = obj.device.replace(/-/g, \" \");\n    msg.payload = device + \" \" + obj.action+\"\\n\";\n    global.set(\"LastCommand\", msg.payload);\n    return msg;\n}",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 260,
+      "y": 420,
+      "wires": [
+          [
+              "e63fe7b.f57b318",
+              "b90d5c01.36a4b",
+              "ba3b8ce1.2ec8a"
+          ]
+      ]
+  },
+  {
+      "id": "9a1b3cff.df2c6",
+      "type": "comment",
+      "z": "4464d37e.3c1aec",
+      "name": "setup config file path",
+      "info": "If you are not running as pi or /home/pi is\nnot writable change the location of where\nthis flow will read and write ST settings\nsettigns will be stored in /home/pi/.red-st-connect.conf",
+      "x": 310,
+      "y": 676,
+      "wires": []
+  },
+  {
+      "id": "e63fe7b.f57b318",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "OK response",
+      "func": "msg.headers = {};\nmsg.headers['Content-Type'] = 'application/json';\nmsg.payload =  {\"X10NodeRed\":\"OK\"};\nreturn msg;\n",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 450,
+      "y": 600,
+      "wires": [
+          [
+              "c6067ee5.9af4c"
+          ]
+      ]
+  },
+  {
+      "id": "b90d5c01.36a4b",
+      "type": "debug",
+      "z": "4464d37e.3c1aec",
+      "name": "",
+      "active": false,
+      "console": "false",
+      "complete": "payload",
+      "x": 490,
+      "y": 420,
+      "wires": []
+  },
+  {
+      "id": "94402c6e.c2c01",
+      "type": "debug",
+      "z": "4464d37e.3c1aec",
+      "name": "",
+      "active": false,
+      "console": "false",
+      "complete": "payload",
+      "x": 230,
+      "y": 600,
+      "wires": []
+  },
+  {
+      "id": "a1cc9291.4bc21",
+      "type": "function",
+      "z": "4464d37e.3c1aec",
+      "name": "Rate Limiter",
+      "func": "var interval = (500); // minimum interval between messages (ms)\ncontext.lastTime = context.lastTime || 0;\n\nvar now = Date.now();\n\nif (now-context.lastTime > interval) {\n  context.lastTime = now;\n  return msg;\n} else {\n  return null;\n}",
+      "outputs": 1,
+      "noerr": 0,
+      "x": 370,
+      "y": 260,
+      "wires": [
+          [
+              "2b917033.c2468"
+          ]
+      ]
+  },
+  {
+      "id": "ba3b8ce1.2ec8a",
+      "type": "tcp request",
+      "z": "4464d37e.3c1aec",
+      "server": "localhost",
+      "port": "1099",
+      "out": "sit",
+      "splitc": " ",
+      "name": "mochad",
+      "x": 280,
+      "y": 200,
+      "wires": [
+          [
+              "a1cc9291.4bc21"
+          ]
+      ]
+  }
+]

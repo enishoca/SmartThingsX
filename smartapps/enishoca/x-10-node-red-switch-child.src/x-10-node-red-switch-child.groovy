@@ -89,7 +89,8 @@ def updated() {
   unsubscribe()
   log.debug "Child update with settings: ${settings}"
   initialize()
-  updateX10Device();
+  updateX10Device()
+  state.level = 0;
   subscribe(location, "X10RemoteEvent-${state.deviceString}", X10RemoteEventHandler)
 }
 
@@ -136,6 +137,7 @@ def updateX10Device() {
     theDevice.label = deviceName
     theDevice.name = deviceName
     subscribe(theDevice, "switch", switchChange)
+    subscribe(theDevice, "switch.setLevel", switchSetLevelHandler)
   } 
 }
 
@@ -143,6 +145,26 @@ def switchChange(evt) {
   log.debug "Switch event!setting state now for ${state.x10DeviceID} to ${evt.value}"
   parent.sendStatetoX10(state.x10DeviceID, evt.value)
 }
+
+def switchSetLevelHandler(evt)
+{	
+	if ((evt.value == "on") || (evt.value == "off" ))
+		return
+	int level = evt.value.toInteger()
+    int delta = 0;
+    def command = "";
+    if ( state.level > level ) {
+    	command = "-dim"
+        delta = state.level - level
+    } else {
+    	command = "-bright"
+        delta = level - state.level 
+    }
+    state.level = evt.value.toInteger()
+    parent.sendStatetoX10(state.x10DeviceID+command, delta)
+	log.info "switchSetLevelHandler Event: ${level}"
+}
+
 
 def X10RemoteEventHandler(evt) {
   log.debug "X10RemoteEventHandler Event: ${evt.stringValue}"
@@ -154,11 +176,23 @@ def setDeviceStatus(deviceString, status) {
   log.debug "Child setDeviceStatus deviceString:[${deviceString}]  state.deviceString:[${state.deviceString}]"
   def theDevice = getDevicebyNetworkId(getX10DeviceID())
   if ((theDevice) && (deviceString == state.deviceString)) { // The switch already exists
-    if (status == "on") {
-      theDevice.on()
-    } else {
-      theDevice.off()
-    }
+      int level = theDevice.currentValue("level").toInteger()
+      switch (status) {
+      case "on":
+        theDevice.on()
+        //log.trace ("Turning on")
+        break
+      case "off":
+        theDevice.off()
+        //log.trace ("Turning off")
+        break
+      case "dim":   
+        theDevice.setLevel(level - 1)
+        break
+      case "bright":
+        theDevice.setLevel(level + 1)
+        break
+     } 
   } 
 }
 

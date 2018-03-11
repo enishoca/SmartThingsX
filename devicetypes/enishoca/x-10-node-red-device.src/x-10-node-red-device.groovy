@@ -17,30 +17,36 @@
  */
  
 metadata {
-  definition(name: "X-10 Node Red Device", namespace: "enishoca", author: "Enis Hoca") {
-    capability "Switch"
-    capability "Actuator"
-  }
-  simulator {
-  }
-  tiles {
-
-    standardTile("switch", "device.switch", width: 1, height: 1, canChangeIcon: true) {
-      state "on",
-        label: '${name}',
-        action: "switch.off",
-        icon: "st.switches.switch.on",
-        backgroundColor: "#79b821"
-      state "off",
-        label: '${name}',
-        action: "switch.on",
-        icon: "st.switches.switch.off",
-        backgroundColor: "#ffffff"
+        definition(name: "X-10 Node Red Device", namespace: "enishoca", author: "Enis Hoca") {
+        capability "Switch"
+        capability "Switch Level"
     }
 
-    main "switch"
-    details(["switch"])
-  }
+	// simulator metadata
+	simulator {
+	}
+
+	// UI tile definitions
+	tiles(scale: 2) {
+		multiAttributeTile(name: "switch", type: "lighting", width: 6, height: 4, canChangeIcon: true, canChangeBackground: true) {
+			tileAttribute("device.switch", key: "PRIMARY_CONTROL") {
+    			attributeState "off", label: '${name}', action: "switch.on", icon: "st.switches.light.off", backgroundColor: "#ffffff", nextState: "turningOn"
+		      	attributeState "on", label: '${name}', action: "switch.off", icon: "st.switches.light.on", backgroundColor: "#79b821", nextState: "turningOff"
+				attributeState "turningOff", label: '${name}', action: "switch.on", icon: "st.switches.light.off", backgroundColor: "#ffffff", nextState: "turningOn"
+		      	attributeState "turningOn", label: '${name}', action: "switch.off", icon: "st.switches.light.on", backgroundColor: "#79b821", nextState: "turningOff"
+        	}
+            tileAttribute("level", key: "SECONDARY_CONTROL") {
+                attributeState "level", label: 'Light dimmed to ${currentValue}' //%'
+            }    
+		}
+ 
+		controlTile("dimmerSliderControl", "device.level", "slider", height: 2, width: 2, range: "0..100", inactiveLabel: false) {
+			state "default", action:"setLevel"
+		}    
+		main "switch"
+		details(["switch",
+        "dimmerSliderControl"])
+	}
 }
 
 // parse events into attributes
@@ -56,3 +62,31 @@ def off() {
   sendEvent(name : "switch", value : "off");
 }
 
+def setLevel(val){
+    def prev = device.currentValue("level")
+    log.info "setLevel $val : prev ${prev}"
+    log.debug "current switch value: ${device.currentValue('level')}"
+    log.debug "latest switch value: ${device.latestValue('level')}"
+   
+    // make sure we don't drive switches past allowed values (command will hang device waiting for it to
+    // execute. Never commes back)
+    if (val < 0){
+    	val = 0
+    }
+    
+    if( val > 100){
+    	val = 100
+    }
+    
+    if (val == 0){ 
+    	sendEvent(name:"level",value:val)
+        off()
+    	 
+    }
+    else
+    { 
+     	on()
+    	sendEvent(name:"level",value:val)
+    	sendEvent(name:"switch.setLevel",value:val)
+    }
+}

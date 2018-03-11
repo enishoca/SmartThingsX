@@ -139,7 +139,7 @@ def lanResponseHandler(evt) {
       break;
     case 'DeviceUpdate':
       def body = parseHttpBody(map.body);
-      //log.trace "lanResponseHandler Body: ${body}"
+      log.trace "lanResponseHandler Body: ${body}"
       processEvent(body)
       break;
     //default:
@@ -175,7 +175,7 @@ private updateDevice(deviceString, status) {
 }
 
 private sendCommand(path) {
-  //log.trace "send comand to Node Red Server at: ${path}"
+  log.trace "send comand to Node Red Server at: ${path}"
 
   if (settings.nodeRedAddress.length() == 0 ||
     settings.nodeRedPort.length() == 0) {
@@ -192,11 +192,13 @@ private sendCommand(path) {
     path: path,
     headers: headers
   )
+  //log.trace hubAction
   sendHubCommand(hubAction)
 }
 
 private parseHttpHeaders(headers) {
   def obj = [: ]
+
   try {
     new String(headers.decodeBase64()).split("\r\n").each {
       param ->
