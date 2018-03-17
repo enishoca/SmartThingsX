@@ -51,7 +51,28 @@ def normalPage() {
   return dynamicPage(name: "pageMain", title: "", install: true, uninstall: true) {       
  	section(title: sectionTitle) {
         label(name: "label", title: "Assign a name", defaultValue:"X-10 Sensor ${state.securityCode}", required: true, multiple: false)
-        input "buttonSwitch", "capability.switch", title: "Select SmartThings switch to control", required: true, multiple: true
+        
+        input(name: "deviceType", title: "Device Type", type: "enum", submitOnChange: true, options: [
+                    "remote" : "Security Remote",
+                    "keyfob" : "Security Key Fob",
+                    "panic" : "Panic Button",
+                    "switch": "Sensor"])
+                    
+        switch (deviceType) {
+          case "remote" : 
+           input(name: "armSwitch", type: "capability.switch", title: "Arm Away / Disarm" , required: false, multiple: true)
+           input(name: "armHomeSwitch", type: "capability.switch", title: "Arm Home / Disarm" , required: false, multiple: true)
+           input(name: "allLights", type: "capability.switch", title: "Security Lights" , required: false, multiple: true)
+           input(name: "panic", type: "capability.switch", title: "Panic" , required: false, multiple: true)
+           break;
+         case "keyfob" : 
+           input(name: "armSwitch", type: "capability.switch", title: "Arm Away / Disarm" , required: false, multiple: true)
+           input(name: "allLights", type: "capability.switch", title: "Lights On/Off" , required: false, multiple: true)
+           input(name: "panic", type: "capability.switch", title: "Panic" , required: false, multiple: true)
+           break;
+        default:         
+          input(name: "buttonSwitch", type: "capability.switch", title: "Select SmartThings switch to pair with" , required: true, multiple: true)
+        }
       }
       section("Send low battery and tamper notifications?") {
         input("recipients", "contact", title: "Send notifications to", required: false, multiple: true) 
@@ -59,11 +80,13 @@ def normalPage() {
   }     
 }
 
+//input(name: "deviceType", type: "enum", title: "Device Type", options: ["Security Remote","Security Motion Sensor (MS18A, MS10A etc.)","Blue","Yellow"])
+//input "buttonSwitch", "capability.switch", title: "Select SmartThings switch to control", required: true, multiple: true
 
 def discoveryPage() {
   subscribe(location, null, lanResponseHandler, [filterEvents: false])
   return dynamicPage(name: "pageMain", title: "", refreshInterval: 5, install: true, uninstall: true) {
-    section(title: "Please carry out the sequence for registering the sensor with an X-10 Console on the sensor device.\n\nAny X-10 security device that sends a message, while you are in this mode, will be associated with this SmartApp.\n") {
+    section(title: "Please carry out the sequence for registering the security remote or sensor with an X-10 Console on the sensor device.\n\nAny X-10 security device that sends a message, while you are in this mode, will be associated with this SmartApp.\n") {
        paragraph title: "Device Discovery Mode", required: true,"Looking for X-10 security devices...\n "               
     }
     
@@ -167,31 +190,120 @@ def X10RemoteEventHandler(evt) {
      "Panic_KR15A"
   */
   
+  /*
+    "remote" : "Security Remote",
+    "keyfob" : "Security Key Fob",
+    "panic" : "Panic Button",
+    "switch": "Sensor"])
+  */
+  
 def setDeviceStatus(deviceString, status) {
   
   if (deviceString == state.deviceString) {
+ 
+      switch (settings.deviceType) {
+          case "remote":
+            remoteHandler(status)
+            break
+            
+          case "keyfob": 
+            keyfobHandler(status) 
+            break
 
-    switch (status) {
-        case ~/.*alert.*/:
-        case ~/^Panic.*/: 
-            buttonSwitch.on()
-            //log.trace ("Turning on")
+          default:
+            switchHandler (status)
             break
-        case ~/.*normal.*/:
-            buttonSwitch.off()
-            //log.trace ("Turning off")
-            break
-     }
-     
+      }
+      
      if (status.contains('low')) {
         sendNotif("Low battery alert")
         //log.trace ("low battery alert")
      }
+     
      if (status.contains('tamper')) {
         sendNotif("Tamper alert")
         //log.trace ("tamper alert")
      }
      
+  }
+}
+
+def remoteHandler (status) {
+try {
+    switch (status) {
+        case ~/^arm_home.*/:
+            log.trace ("Arm_Home")
+            if (armHomeSwitch) armHomeSwitch.on()
+            break
+        case ~/^arm_awa.*/:
+            log.trace ("Arm_Awa")
+            if (armSwitch) armSwitch.on()
+            break   
+        case ~/^disarm.*/:
+            log.trace ("Disarm")
+            if (armSwitch) armSwitch.off()
+            if (armHomeSwitch) armHomeSwitch.off()
+            break            
+        case ~/^panic.*/: 
+            log.trace ("Panic")
+            if (panic) panic.on()
+            break
+        case ~/^lights_on.*/:
+            log.trace ("Lights_On")
+            if (allLights) allLights.on()
+            break
+        case ~/^lights_off.*/:
+            log.trace ("Lights_Off")
+            if (allLights) allLights.off()
+            break
+     }
+   } finally {
+   }
+}
+
+def keyfobHandler (status) {
+try {
+    switch (status) {
+        case ~/^arm.*/:
+           log.trace ("Arm_Awa")
+            if (armSwitch) armSwitch.on()
+            break   
+        case ~/^disarm.*/:
+            log.trace ("Disarm")
+            if (armSwitch) armSwitch.off()
+            break            
+        case ~/^panic.*/: 
+            log.trace ("Panic")
+            if (panic) panic.on()
+            break
+        case ~/^lights_on.*/:
+            log.trace ("Lights_On")
+            if (allLights) allLights.on()
+            break
+        case ~/^lights_off.*/:
+            log.trace ("Lights_Off")
+            if (allLights) allLights.off()
+            break
+     }
+   } finally {
+   }
+}
+
+
+def switchHandler (status) {
+  try {
+    switch (status) {
+        case ~/.*alert.*/:
+        case ~/^panic.*/: 
+            log.trace ("Turning on")
+            buttonSwitch.on()
+            break
+        case ~/.*normal.*/:
+            log.trace ("Turning off")
+            buttonSwitch.off()
+            break
+     }
+  } finally {
   }
 }
 
