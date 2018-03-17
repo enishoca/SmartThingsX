@@ -38,7 +38,7 @@ preferences {
 def pageMain() {
   dynamicPage(name: "pageMain", title: "", install: true, uninstall: true) {
 
-    section(title: "Select X-10 code for a remotes button or motion sensor") {
+    section(title: "Pair X-10 remote button or sensor with SmartThing devices") {
       input "deviceHouseCode", "enum", title: "X-10 House Code", required: true, options: [
         "A": "A",
         "B": "B",

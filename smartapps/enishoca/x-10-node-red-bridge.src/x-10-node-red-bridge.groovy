@@ -34,6 +34,7 @@ preferences {
   page(name: "pageMain")
   page(name: "buttonSettings")
   page(name: "switchSettings")
+  page(name: "securitySettings")
 }
 
 def pageMain() {
@@ -58,15 +59,19 @@ def pageMain() {
         href "buttonSettings", title: "Remotes and Motion Sensors", description: "Tap here to add or manage X-10 Remotes and Motion Sensors", 
              image: "https://raw.githubusercontent.com/enishoca/SmartThingsX/master/x1oredb.png", required: false, page: "buttonSettings"
       }
-    }
+      section(title: "X-10 Security Sensors") {
+        href "securitySettings", title: "Security Sensors", description: "Tap here to add or manage X-10 Security Sensors", 
+             image: "https://raw.githubusercontent.com/enishoca/SmartThingsX/master/x1oredb.png", required: false, page: "buttonSettings"
+      }
 
+    }
   }
 }
 
 def buttonSettings() {
   dynamicPage(name: "buttonSettings", title: "X-10 Remotes and Motion Sensors", install: false, uninstall: false) {
     section() {
-      app(name: "childButtons", appName: "X-10 Node Red Button Child", namespace: "enishoca", title: "Add a new remote button or motion sensors...", 
+      app(name: "childButtons", appName: "X-10 Node Red Button Child", namespace: "enishoca", title: "Add a new remote button or motion sensor...", 
           image: "https://raw.githubusercontent.com/enishoca/SmartThingsX/master/x1oredb.png", multiple: true)
     }
   }
@@ -77,6 +82,16 @@ def switchSettings() {
   dynamicPage(name: "switchSettings", title: "X-10 Switches and Modules", install: false, uninstall: false) {
     section() {
       app(name: "childSwitches", appName: "X-10 Node Red Switch Child", namespace: "enishoca", title: "Add a new switches or module...", 
+          image: "https://raw.githubusercontent.com/enishoca/SmartThingsX/master/x1oredb.png", multiple: true)
+    }
+  }
+
+}
+
+def securitySettings() {
+  dynamicPage(name: "securitySettings", title: "X-10 Security Sensors", install: false, uninstall: false) {
+    section() {
+      app(name: "childSecurity", appName: "X-10 Node Red Security Child", namespace: "enishoca", title: "Add a new door/window or other security sensor...", 
           image: "https://raw.githubusercontent.com/enishoca/SmartThingsX/master/x1oredb.png", multiple: true)
     }
   }
