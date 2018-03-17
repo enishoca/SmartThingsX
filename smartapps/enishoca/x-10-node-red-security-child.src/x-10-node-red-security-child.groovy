@@ -232,28 +232,28 @@ def remoteHandler (status) {
 try {
     switch (status) {
         case ~/^arm_home.*/:
-            log.trace ("Arm_Home")
+            //log.trace ("Arm_Home")
             if (armHomeSwitch) armHomeSwitch.on()
             break
         case ~/^arm_awa.*/:
-            log.trace ("Arm_Awa")
+            //log.trace ("Arm_Awa")
             if (armSwitch) armSwitch.on()
             break   
         case ~/^disarm.*/:
-            log.trace ("Disarm")
+            //log.trace ("Disarm")
             if (armSwitch) armSwitch.off()
             if (armHomeSwitch) armHomeSwitch.off()
             break            
         case ~/^panic.*/: 
-            log.trace ("Panic")
+            //log.trace ("Panic")
             if (panic) panic.on()
             break
         case ~/^lights_on.*/:
-            log.trace ("Lights_On")
+            //log.trace ("Lights_On")
             if (allLights) allLights.on()
             break
         case ~/^lights_off.*/:
-            log.trace ("Lights_Off")
+            //log.trace ("Lights_Off")
             if (allLights) allLights.off()
             break
      }
@@ -265,23 +265,23 @@ def keyfobHandler (status) {
 try {
     switch (status) {
         case ~/^arm.*/:
-           log.trace ("Arm_Awa")
+            //log.trace ("Arm_Awa")
             if (armSwitch) armSwitch.on()
             break   
         case ~/^disarm.*/:
-            log.trace ("Disarm")
+            //log.trace ("Disarm")
             if (armSwitch) armSwitch.off()
             break            
         case ~/^panic.*/: 
-            log.trace ("Panic")
+            //log.trace ("Panic")
             if (panic) panic.on()
             break
         case ~/^lights_on.*/:
-            log.trace ("Lights_On")
+            //log.trace ("Lights_On")
             if (allLights) allLights.on()
             break
         case ~/^lights_off.*/:
-            log.trace ("Lights_Off")
+            //log.trace ("Lights_Off")
             if (allLights) allLights.off()
             break
      }
@@ -295,11 +295,11 @@ def switchHandler (status) {
     switch (status) {
         case ~/.*alert.*/:
         case ~/^panic.*/: 
-            log.trace ("Turning on")
+            //log.trace ("Turning on")
             buttonSwitch.on()
             break
         case ~/.*normal.*/:
-            log.trace ("Turning off")
+            //log.trace ("Turning off")
             buttonSwitch.off()
             break
      }
