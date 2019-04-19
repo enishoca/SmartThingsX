@@ -54,13 +54,11 @@ def parse(String description) {}
 
 def on() {
   log.debug "Executing 'on'"
-  sendEvent(name : "switch", value : "off");
   sendEvent(name : "switch", value : "on");
 }
 
 def off() {
   log.debug "Executing 'off'"
-  sendEvent(name : "switch", value : "on");
   sendEvent(name : "switch", value : "off");
 }
 
